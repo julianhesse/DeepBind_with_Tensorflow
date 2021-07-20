@@ -7,16 +7,16 @@ Original file is located at
     https://colab.research.google.com/drive/1ElLcihYoUY4RqhGQQmOMIH1kHdtmSH1f
 """
 
-# Load the Drive helper and mount
-from google.colab import drive
-
-# This will prompt for authorization.
-drive.mount('/content/drive')
-# After executing the cell above, Drive
-# files will be present in "/content/drive/My Drive".
-!ls "/content/drive/My Drive"
-
-!ls "/content/drive/My Drive/Colab Notebooks/"
+# # Load the Drive helper and mount
+# from google.colab import drive
+# 
+# # This will prompt for authorization.
+# drive.mount('/content/drive')
+# # After executing the cell above, Drive
+# # files will be present in "/content/drive/My Drive".
+# !ls "/content/drive/My Drive"
+# 
+# !ls "/content/drive/My Drive/Colab Notebooks/"
 
 import tensorflow as tf
 import numpy as np
@@ -98,7 +98,7 @@ class Chip(Experiment):
         frac2=int(len(train_dataset)*2/3)
         return train_dataset[:frac1],train_dataset[frac1:frac2],train_dataset[frac2:],train_dataset
 
-filename='/content/drive/My Drive/Colab Notebooks/Chip-seq/ELK1_GM12878_ELK1_(1277-1)_Stanford_AC.seq.gz'
+filename=snakemake.input[0]
 
 test= Chip(filename)
 d1,d2,d3,dataAll =test.openFile()
@@ -174,6 +174,8 @@ def convolution(input_data, num_input_channels, num_filters, filter_shape, conv_
 
     return out
 
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 graph=tf.Graph()
 with graph.as_default():
     
@@ -518,7 +520,7 @@ with tf.Session(graph=graph2, config=tf.ConfigProto(log_device_placement=True)) 
           best_auc=auc
           print('Best AUC So Far is : ', best_auc)
           ##save model
-          save_path = saver.save(sess, "/content/drive/My Drive/Colab Notebooks/Test2/model2")
+          save_path = saver.save(sess, snakemake.params[0] + 'model')
           print('Model Saved!')
 
 import copy
@@ -526,7 +528,7 @@ from sklearn import metrics
 import numpy as np
 import random
 
-filename='/content/drive/My Drive/Colab Notebooks/Chip-seq/ELK1_GM12878_ELK1_(1277-1)_Stanford_B.seq.gz'
+filename=snakemake.input[0]
 
 class ChipTest(Experiment):
     def __init__(self,filename,motiflen=24):
@@ -554,15 +556,17 @@ data_all=np.asarray([el[0] for el in dataAll],dtype=np.float32)
 label_all=np.asarray([el[1] for el in dataAll],dtype=np.float32).reshape(len(data_all),1)
 
 import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 TestGraph=tf.Graph()
 with tf.Session(graph=TestGraph) as sess:    
   
   # #First let's load meta graph and restore weights
-  ckpt = tf.train.get_checkpoint_state('/content/drive/My Drive/Colab Notebooks/Test2', latest_filename='checkpoint')
+  ckpt = tf.train.get_checkpoint_state(snakemake.params[0], latest_filename='checkpoint')
   
   if ckpt and ckpt.model_checkpoint_path:  # if there's checkpoint
-    saver = tf.train.import_meta_graph('/content/drive/My Drive/Colab Notebooks/Test2/model2.meta')
+    saver = tf.train.import_meta_graph(snakemake.output[0])
     saver.restore(sess, ckpt.model_checkpoint_path)
 
 
