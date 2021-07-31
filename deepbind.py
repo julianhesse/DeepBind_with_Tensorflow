@@ -98,7 +98,7 @@ class Chip(Experiment):
         frac2=int(len(train_dataset)*2/3)
         return train_dataset[:frac1],train_dataset[frac1:frac2],train_dataset[frac2:],train_dataset
 
-filename=snakemake.input[0]
+filename=snakemake.input["train"]
 
 test= Chip(filename)
 d1,d2,d3,dataAll =test.openFile()
@@ -528,7 +528,7 @@ from sklearn import metrics
 import numpy as np
 import random
 
-filename=snakemake.input[0]
+filename=snakemake.input["test"]
 
 class ChipTest(Experiment):
     def __init__(self,filename,motiflen=24):
@@ -566,7 +566,7 @@ with tf.Session(graph=TestGraph) as sess:
   ckpt = tf.train.get_checkpoint_state(snakemake.params[0], latest_filename='checkpoint')
   
   if ckpt and ckpt.model_checkpoint_path:  # if there's checkpoint
-    saver = tf.train.import_meta_graph(snakemake.output[0])
+    saver = tf.train.import_meta_graph(snakemake.params[0] + 'model.meta')
     saver.restore(sess, ckpt.model_checkpoint_path)
 
 
@@ -584,3 +584,6 @@ with tf.Session(graph=TestGraph) as sess:
     auc=metrics.roc_auc_score(label_all, l)
     print(auc)
 
+with open(snakemake.output['prediction'], 'w') as f:
+    for pred in l:
+        f.write(str(pred[0]) + '\n')
